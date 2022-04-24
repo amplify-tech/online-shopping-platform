@@ -57,8 +57,8 @@
 
   <div class="form-group">
   <label>Phone Number: </label>
-  <input type="number" placeholder="phone number" name="phone_login" 
-  min=6000000000 max=9999999999
+  <input placeholder="phone number" name="phone_login" 
+    minlength="10" maxlength="10" 
   required class="form-control">
   </div>
 
@@ -66,6 +66,15 @@
   <label>Password: </label> 
   <input type="password" placeholder="Password" name="pswd_login"  maxlength="30" required class="form-control">
   </div>
+
+<div class="radio">
+  <p>Login as:</p>
+  <label><input type="radio" name="myrole" value="b" required> Buyer </label> <br>
+  <label><input type="radio" name="myrole" value="s" required> Seller </label><br>
+  <label><input type="radio" name="myrole" value="d" required> Delivery Person </label> 
+  <label><input type="radio" name="myrole" value="a" required> Admin </label> 
+  <label><input type="radio" name="myrole" value="o" required> Owner </label> 
+</div>
 
   <div class="form-group">
   <button type="submit" class="btn btn-success" >Login</button>

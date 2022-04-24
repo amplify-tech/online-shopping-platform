@@ -25,13 +25,14 @@ SECRET_KEY = '*vldv(jb0dn!*dm=*pf(5*74jyosuh&zdrk34$)t6x9t-$=#u1'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'login',
+    'product',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <style>
     body{
       font-size: 18px;
@@ -51,7 +52,7 @@
 <div class="container">
 
 <div class="well" id="maindiv">
-<h3>Register</h3>
+<h3 style="text-align: center;">Register</h3>
   <form action="/register/" method="POST"> 
   {% csrf_token %}
 
@@ -62,9 +63,8 @@
   </div>
   <div class="form-group">
   <label>Phone Number: </label>
-  <input type="number" placeholder="phone number" name="myphone" 
-  min=6000000000 max=9999999999
-  required class="form-control">
+  <input placeholder="phone number" name="myphone" 
+  minlength="10" maxlength="10" required class="form-control">
   </div>
 
   <div class="form-group">
@@ -75,9 +75,23 @@
   <label>Re-type Password: </label> 
   <input type="password" placeholder="Password" name="mypswd2"  minlength="4" maxlength="25" required class="form-control">
   </div>
+<div class="radio">
+  <span>Register as:</span><br>
+  <label><input type="radio" name="myrole" value="b" required> Buyer </label> <br>
+  <label><input type="radio" name="myrole" value="s" required> Seller </label><br>
+  <label><input type="radio" name="myrole" value="d" required> Delivery Person </label>  <br>
+  <label><input type="radio" name="myrole" value="a" required> Admin </label> 
+</div>
+  <!-- admin code -->
+  <div class="form-group" id="adc_div" style="display: none;">
+  <label>Admin Code: </label>
+  <input placeholder="Admin Code" name="admincode"
+    class="form-control">
+  </div>
+
 
   <div class="form-group">
-  <button type="submit" class="btn btn-success" >Login</button>
+  <button type="submit" class="btn btn-success" >Register</button>
   </div>
 
   <div id="errormsz">
@@ -89,5 +103,17 @@
   </form>
 </div>
 </div>
+<script>
+$(document).ready(function(){
+  $("input[type=radio]").change(function(){
+    if($(this).val() == 'a'){
+      $('#adc_div').show();
+    }
+    else{
+      $('#adc_div').hide();
+    }
+  });
+});
+</script>
 </body>
 </html>
