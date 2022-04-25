@@ -36,6 +36,13 @@
   .card img{
     height: 140px;
   }
+    #maindiv{
+      width: 94%;
+      max-width: 450px;
+      margin-right: auto;
+      margin-left: auto;
+      padding: 0 10px 15px 10px;
+    }
 </style>
 </head>
 <body>
@@ -52,15 +59,11 @@
     </div>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
-        <li class="active"><a href="#">Home</a></li>
+        <li class="active"><a href="/">Home</a></li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         {% if user.is_authenticated %}
         <li><a href="/profile/"><span class="glyphicon glyphicon-user"></span> {{user.first_name}}</a></li>
-        <li><a href="/logout/"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
-        {% else %}
-        <li><a href="/register/"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>
-        <li><a href="/login/"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
         {% endif %}
       </ul>
     </div>
@@ -68,14 +71,23 @@
 </nav>
   
 <div class="container">
-  <div class="tiles_div">
-    {% for x in product_list %}
-    <div class="card">
-      <a href="product/{{x.0}}/" target="_blank"> <img src="{{x.3}}"> </a> <br>
-      <span>{{x.1|slice:"0:25"}} <br>  <b> &#8377;{{x.2}}</b> </span>
-    </div>
-    {% endfor %}
+
+<div class="well" id="maindiv">
+  <p style="font-size:23px;"><b>{{product_data.1}}</b></p>
+  <p style="font-size:21px;"><b> &#8377; {{product_data.2}}</b></p>
+  <p>On Sell From : {{product_data.5 | date:'h:i A, d-M-Y'}}</p>
+  {% if product_data.4 %}
+    <p>About : {{product_data.4}}</p>
+  {% endif %}
+</div>
+
+<div class="tiles_div">
+  {% for x in product_photo %}
+  <div class="card">
+    <a href="{{x.0}}" > <img src="{{x.0}}"> </a> <br>
   </div>
+  {% endfor %}
+</div>
 
 <br><br><br>
 </div>

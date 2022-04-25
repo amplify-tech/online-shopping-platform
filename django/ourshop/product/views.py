@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from datetime import datetime
 import pytz,csv
 from .queries import *
-from .models import ProductImage
+from .models import ImageModel
 from .forms import ImageForm
 
 tz = pytz.timezone('Asia/Kolkata')
@@ -30,7 +30,6 @@ def sell(request):
         return redirect('/')
 
     if request.method == 'POST':
-        print("post")
         ##################################################################
         # handle uploaded images (multiple)
         images_url_list = []
@@ -39,7 +38,7 @@ def sell(request):
 
         if fm.is_valid():
             for f in files:
-             prd_img = ProductImage(multipleimages=f)
+             prd_img = ImageModel(multipleimages=f)
              prd_img.save()
              images_url_list.append(prd_img.multipleimages.url)
         else:
@@ -60,3 +59,13 @@ def sell(request):
         return redirect('/sell/')
     else:
         return render(request, 'seller/sell.html')
+
+
+def view_product(request, product_id=None):
+    if not product_id.isnumeric():
+        return HttpResponse("<h1> invalid url </h1>")
+    product_data,product_photo = getProduct(product_id)
+    if product_data is None:
+        return HttpResponse("<h1> invalid url </h1>")
+    context = {'product_data':product_data, 'product_photo':product_photo}
+    return render(request, 'view_product.html',context)

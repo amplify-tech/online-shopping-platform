@@ -5,11 +5,14 @@ from psycopg2.sql import SQL,Identifier
 from login.queries import connect_db
 from datetime import datetime
 
-################################################################		
+################################################################	
 def showProduct():
 	valid,conn,cur = connect_db()
 	if valid:
-		cur.execute("SELECT * FROM product INNER JOIN product_images ON product.product_id=product_images.product_id limit 10;")
+		cur.execute("""SELECT product.product_id,product_name,price,url
+			FROM product
+			INNER JOIN product_images ON product.product_id=product_images.product_id 
+			;""")
 		product_list = cur.fetchall()
 		cur.close()
 		conn.close()
@@ -41,8 +44,6 @@ def addProduct(seller_id,product_name, product_price, product_detail,images_url_
 					[product_name, product_price, seller_id,product_detail,current])
 		
 		this_product_id = cur.fetchone()[0]
-		print(this_product_id)
-		print(images_url_list)
 
 		for img_url in images_url_list:
 			cur.execute("INSERT INTO product_images (product_id,url) VALUES (%s,%s);",
@@ -56,3 +57,16 @@ def addProduct(seller_id,product_name, product_price, product_detail,images_url_
 		print("Something went wrong!")
 		return False
 
+def getProduct(product_id):
+	valid,conn,cur = connect_db()
+	if valid:
+		cur.execute("SELECT * FROM product where product_id = %s", [product_id])
+		product_data = cur.fetchone()
+		cur.execute("SELECT url FROM product_images where product_id = %s", [product_id])
+		product_photo = cur.fetchall()
+		cur.close()
+		conn.close()
+		return product_data,product_photo
+	else:
+		print("Something went wrong!")
+		return None,None

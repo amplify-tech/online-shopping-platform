@@ -1,8 +1,8 @@
 from django import forms
-from .models import  ProductImage
+from .models import  ImageModel
 
 class ImageForm(forms.ModelForm):
     class Meta:
-        model = ProductImage
+        model = ImageModel
         fields=['multipleimages']  
         label ={}
