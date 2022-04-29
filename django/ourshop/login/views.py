@@ -109,13 +109,14 @@ def register(request,  nvuser_id=None):
 		mypswd2 = request.POST['mypswd2']
 		myrole = request.POST['myrole']
 		admincode = request.POST['admincode']
-		print(myname, myphone, myrole, admincode)
+		pincode = request.POST['pincode']
+		print(myname, myphone, myrole, admincode,pincode)
 		myusername = myphone + myrole
 
 
 		valid, mszs = verify_data(myname, myphone, mypswd1, mypswd2,myusername,myrole, admincode)
 		if(valid):
-			register_new_user(username=myusername,fullname=myname, role=myrole, password=mypswd1)
+			register_new_user(username=myusername,fullname=myname, role=myrole, password=mypswd1, pincode=pincode)
 
 			user = auth.authenticate(username=myusername, password=mypswd1)
 			auth.login(request,user)
@@ -130,18 +131,44 @@ def register(request,  nvuser_id=None):
 
 def startweb(request):
 	try:
-		if User.objects.filter(id=0).count() ==0:
-			# register owner and admin (o,a) special_id
-			new_user = User.objects.create_user(id=0,username="9999999999o",first_name="flipkart owner", last_name="o", password="jgQ#k%(gd57j")
-			new_user.save()
-			new_user = User.objects.create_user(id=-1,username="9999999999a",first_name="flipkart admin", last_name="a", password="jgQ#k%(gd57j")
-			new_user.save()
-			print("owner registered")
-		# else:
-		# 	print("owner already exist")
-
+		register_owner()
 	except Exception as e:
 		print(e)
+		
+	return redirect('/')
+
+def allocate_area(request):
+	if request.user.is_authenticated: 
+		if request.user.id in special_id:
+			try:
+				folder = '/home/akram/Desktop/coding/project/django/DB_part/csv_user/'
+				pincode_file = folder + 'pincode.csv'
+				del_boy_file = folder + 'del.csv'
+
+				# fix some pincode
+				with open(pincode_file, 'r') as csvfile:
+					reader = csv.reader(csvfile)
+					column_name = next(reader)
+
+					pincode_list = []
+					for row in reader:
+						# print(row)
+						pincode_list.append(row)
+
+					savePincode(pincode_list)
+
+				# add some delivery persons
+				with open(del_boy_file, 'r') as csvfile:
+					reader = csv.reader(csvfile)
+					column_name = next(reader)
+
+					for row in reader:
+						# print(row)
+						if not User.objects.filter(username=row[2]+'d').exists():
+							register_new_user(username=row[2]+'d',fullname=row[1], role='d', password=row[3],pincode=row[4])
+
+			except Exception as e:
+				print(e)
 
 	return redirect('/')
 
@@ -164,7 +191,7 @@ def loaddummy(request):
 						column_name = next(reader)
 
 						for row in reader:
-							register_new_user(username=row[2]+role,fullname=row[1], role=role, password=row[3])
+							register_new_user(username=row[2]+role,fullname=row[1], role=role, password=row[3],pincode=None)
 
 			except Exception as e:
 				print(e)

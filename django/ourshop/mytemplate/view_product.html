@@ -36,13 +36,21 @@
   .card img{
     height: 140px;
   }
-    #maindiv{
-      width: 94%;
-      max-width: 450px;
-      margin-right: auto;
-      margin-left: auto;
-      padding: 0 10px 15px 10px;
-    }
+  #maindiv{
+    width: 94%;
+    max-width: 450px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 0 10px 15px 10px;
+  }
+  div #errormsz{
+    color: #b30000;
+    width: 94%;
+    max-width: 450px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 0 10px 15px 5px;
+  }
 </style>
 </head>
 <body>
@@ -73,18 +81,28 @@
 <div class="container">
 
 <div class="well" id="maindiv">
-  <p style="font-size:23px;"><b>{{product_data.1}}</b></p>
-  <p style="font-size:21px;"><b> &#8377; {{product_data.2}}</b></p>
-  <p>On Sell From : {{product_data.5 | date:'h:i A, d-M-Y'}}</p>
-  {% if product_data.4 %}
-    <p>About : {{product_data.4}}</p>
+  <p style="font-size:23px;"><b>{{product_data.product_name}}</b></p>
+  <p style="font-size:21px;"><b> &#8377; {{product_data.price}}</b></p>
+  <p>On Sell From : {{product_data.timestmp | date:'h:i A, d-M-Y'}}</p>
+  {% if product_data.details %}
+    <p>About : {{product_data.details}}</p>
+  {% endif %}
+
+  <!-- if buyer -->
+  {% if user.username|slice:"10:11" == 'b' %}
+  <a href="/addtowish/{{product_data.product_id}}" role="button" class="btn btn-info">Add To Wishlist</a>
+  <a href="/addtocart/{{product_data.product_id}}" role="button" class="btn btn-success">Add To Cart</a>
+  {% else %}
+  <a href="#" role="button" class="btn btn-info disabled">Add To Wishlist</a>
+  <a href="#" role="button" class="btn btn-success disabled">Add To Cart</a>
+  <p style="color:#b30000;">Please login as <b>Buyer</b> for adding Product to Cart / Wishlist!</p>
   {% endif %}
 </div>
 
 <div class="tiles_div">
   {% for x in product_photo %}
   <div class="card">
-    <a href="{{x.0}}" > <img src="{{x.0}}"> </a> <br>
+    <a href="{{x.url}}" > <img src="{{x.url}}"> </a> <br>
   </div>
   {% endfor %}
 </div>

@@ -7,4 +7,5 @@ urlpatterns = [
 	path('register/', views.register, name='register'),
 	path('loaddummy/', views.loaddummy, name='loaddummy'),
 	path('startweb/', views.startweb, name='startweb'),
+	path('allocate_area/', views.allocate_area, name='allocate_area'),
 ]

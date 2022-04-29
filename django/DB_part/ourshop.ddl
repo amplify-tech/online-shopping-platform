@@ -6,12 +6,14 @@ DROP TABLE IF EXISTS product_images;
 DROP TABLE IF EXISTS product_category;
 DROP TABLE IF EXISTS category;
 DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS wishlist_product;
 DROP TABLE IF EXISTS wishlist;
+DROP TABLE IF EXISTS cart_product;
 DROP TABLE IF EXISTS cart;
 DROP TABLE IF EXISTS product;
 DROP TABLE IF EXISTS address;
-DROP TABLE IF EXISTS area_allocation;
 DROP TABLE IF EXISTS delivery_person;
+DROP TABLE IF EXISTS area_allocation;
 DROP TABLE IF EXISTS seller;
 DROP TABLE IF EXISTS customer;
 DROP TABLE IF EXISTS owner_account;
@@ -29,7 +31,7 @@ DROP TABLE IF EXISTS owner_account;
 -- );
 -------------------------------------------
 CREATE TABLE owner_account (
-    owner_id SERIAL NOT NULL,
+    owner_id INT NOT NULL,
     user_id INT NOT NULL,
     Primary Key(owner_id),
     FOREIGN key(user_id) references auth_user(id) on delete set NULL
@@ -49,19 +51,19 @@ CREATE TABLE seller (
     FOREIGN key(user_id) references auth_user(id) on delete set NULL
 );
 
+-- area alocation 
+CREATE TABLE area_allocation(
+    pincode INT NOT NULL,
+    Primary Key(pincode)
+);
+
 CREATE TABLE delivery_person (
     delivery_person_id SERIAL NOT NULL,
     user_id INT NOT NULL,
+    pincode INT NOT NULL,
     Primary Key(delivery_person_id),
-    FOREIGN key(user_id) references auth_user(id) on delete set NULL
-);
--- area alocation 
-
-CREATE TABLE area_allocation(
-    pincode INT UNIQUE,
-    delivery_person_id INT NOT NULL,
-    Primary Key(pincode, delivery_person_id),
-    FOREIGN key(delivery_person_id) references delivery_person on delete set NULL
+    FOREIGN key(user_id) references auth_user(id) on delete set NULL,
+    FOREIGN key(pincode) references area_allocation(pincode) on delete set NULL
 );
 
 
@@ -91,19 +93,31 @@ CREATE TABLE product (
 CREATE TABLE cart (
     cart_id SERIAL NOT NULL,
     customer_id INT NOT NULL,
+    Primary Key(cart_id),
+    FOREIGN key(customer_id) references customer on delete set NULL
+);
+
+CREATE TABLE cart_product (
+    cart_id INT NOT NULL,
     product_id INT NOT NULL,
     quantity INT NOT NULL,
-    Primary Key(cart_id),
-    FOREIGN key(customer_id) references customer on delete set NULL,
+    Primary Key(cart_id,product_id),
+    FOREIGN key(cart_id) references cart on delete set NULL,
     FOREIGN key(product_id) references product on delete set NULL
 );
 
 CREATE TABLE wishlist (
     wishlist_id SERIAL NOT NULL,
     customer_id INT NOT NULL,
-    product_id INT NOT NULL,
     Primary Key(wishlist_id),
-    FOREIGN key(customer_id) references customer on delete set NULL,
+    FOREIGN key(customer_id) references customer on delete set NULL
+);
+
+CREATE TABLE wishlist_product (
+    wishlist_id INT NOT NULL,
+    product_id INT NOT NULL,
+    Primary Key(wishlist_id,product_id),
+    FOREIGN key(wishlist_id) references wishlist on delete set NULL,
     FOREIGN key(product_id) references product on delete set NULL
 );
 
@@ -119,8 +133,7 @@ CREATE TABLE orders (
     FOREIGN key(customer_id) references customer on delete set NULL,
     FOREIGN key(product_id) references product on delete set NULL,
     FOREIGN key(delivery_person_id) references delivery_person on delete set NULL,
-    FOREIGN key(address_id) references address on delete set NULL,
-    FOREIGN key(quantity) references cart on delete set NULL
+    FOREIGN key(address_id) references address on delete set NULL
 );
 
 CREATE TABLE category(
@@ -141,6 +154,7 @@ CREATE TABLE product_images (
     image_id SERIAL NOT NULL,
     product_id INT NOT NULL,
     url VARCHAR NOT NULL,
+    default_img BOOLEAN NOT NULL,
     PRIMARY KEY (image_id),
     FOREIGN key(product_id) references product on delete set NULL
 );

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>E-commerce</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+<style>
+  body{
+    font-size: 18px;
+  }
+  .maindiv{
+    width: 94%;
+    max-width: 450px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 0 10px 15px 10px;
+  }
+  div #errormsz{
+    color: #b30000;
+    width: 94%;
+    max-width: 450px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 0 10px 15px 5px;
+  }
+  td{
+    /*max-width: 100px;*/
+    word-wrap: break-word;
+  }
+  .btn{
+    font-size: 16px;
+    padding: 2px 8px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>                        
+      </button>
+      <a class="navbar-brand" href="#">E-commerce</a>
+    </div>
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="/">Home</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li><a href="/profile/"><span class="glyphicon glyphicon-user"></span> {{user.first_name}}</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+  
+<div class="container">
+    <div id="errormsz">
+    {% for message in messages %}
+      <p>{{message}}</p>
+    {% endfor %}
+  </div>
+
+<div class="maindiv well" >
+  <p>Name : {{user.first_name}}</p>
+  <p>Phone No.: {{user.username|slice:"0:10"}}</p>
+  <div class="well">
+    <p><b>Wallet</b></p>
+    <p>Balance : {{wallet_data.balance}}</p>
+
+  <form action="/addmoney/" method="POST" class="form-inline" > 
+  {% csrf_token %}
+  <div class="form-group">
+  <input placeholder="500" name="amount" type="number" 
+  required class="form-control">
+  </div>
+  <div class="form-group">
+  <button type="submit" class="btn btn-success" >Add Money</button>
+  </div>
+  </form>
+
+  </div>
+
+{% if isbuyer %}
+  <div class="well">
+    <p><b>Address</b></p>
+    <form action="/addaddress/" method="POST" > 
+  {% csrf_token %}
+  <table>
+    <tr>
+      <td>state</td>
+      <td>
+        <div class="form-group">
+        <input placeholder="state" name="state" required class="form-control">
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>city</td>
+      <td>
+        <div class="form-group">
+        <input placeholder="city" name="city" required class="form-control">
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>street</td>
+      <td>
+        <div class="form-group">
+        <input placeholder="street" name="street" required class="form-control">
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>pincode</td>
+      <td>
+        <div class="form-group">
+        <input placeholder="pincode" name="pincode" type="number" max="999999" required class="form-control">
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div class="form-group">
+        <button type="submit" class="btn btn-success" >Add Address</button>
+        </div>
+      </td>
+    </tr>
+  </table>
+  </form>
+</div>
+  {%endif%}
+</div>
+{% if isbuyer %}
+<div class="well table-responsive maindiv" style="max-width: 800px;" >
+  <table class="table table-striped table-bordered table-hover table-condensed">
+    {% for x in address_data %}
+    <tr>
+      <td>{{forloop.counter}}</td>
+      <td>{{x.state}}</td>
+      <td>{{x.city}}</td>
+      <td>{{x.street}}</td>
+      <td>{{x.pincode}}</td>
+      <td><a href="/deleteaddress/{{x.address_id}}" role="button" class="btn btn-danger">Remove</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{%endif%}
+
+<br><br><br>
+</div>
+</body>
+</html>

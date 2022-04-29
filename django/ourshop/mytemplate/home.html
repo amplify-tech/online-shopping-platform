@@ -36,6 +36,15 @@
   .card img{
     height: 140px;
   }
+    div #errormsz{
+    color: #b30000;
+    width: 94%;
+    max-width: 450px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 0 10px 15px 5px;
+  }
+
 </style>
 </head>
 <body>
@@ -68,11 +77,16 @@
 </nav>
   
 <div class="container">
+  <div id="errormsz">
+    {% for message in messages %}
+      <p>{{message}}</p>
+    {% endfor %}
+  </div>
   <div class="tiles_div">
     {% for x in product_list %}
     <div class="card">
-      <a href="product/{{x.0}}/" target="_blank"> <img src="{{x.3}}"> </a> <br>
-      <span>{{x.1|slice:"0:25"}} <br>  <b> &#8377;{{x.2}}</b> </span>
+      <a href="product/{{x.product_id}}/" > <img src="{{x.url}}"> </a> <br>
+      <span>{{x.product_name|slice:"0:25"}} <br>  <b> &#8377;{{x.price}}</b> </span>
     </div>
     {% endfor %}
   </div>

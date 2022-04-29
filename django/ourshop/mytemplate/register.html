@@ -19,6 +19,14 @@
       margin-left: auto;
       padding: 0 10px 15px 10px;
     }
+  div #errormsz{
+    color: #b30000;
+    width: 94%;
+    max-width: 450px;
+    margin-right: auto;
+    margin-left: auto;
+    padding: 0 10px 15px 5px;
+  }
   </style>
 </head>
 <body>
@@ -56,6 +64,7 @@
   <form action="/register/" method="POST"> 
   {% csrf_token %}
 
+  <input name="pincode" value="111150" hidden>
   <div class="form-group">
   <label>Full Name: </label>
   <input placeholder="Full Name" name="myname"
