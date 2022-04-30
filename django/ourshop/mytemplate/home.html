@@ -61,7 +61,19 @@
     </div>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
-        <li class="active"><a href="#">Home</a></li>
+          <li class="active"><a href="/">Home</a></li>
+        {% if user.username|slice:"10:11" == 'b' %}
+          <li><a href="/cart/">Cart</a></li>
+          <li><a href="/wishlist/">Wishlist</a></li>
+          <li><a href="/history/order">Order History</a></li>
+        {% elif user.username|slice:"10:11" == 's' %}
+          <li><a href="/sell/">Sell</a></li>
+          <li><a href="/history/order">Order</a></li>
+        {% elif user.username|slice:"10:11" == 'd' %}
+          <li><a href="/history/order">Orders</a></li>
+        {% elif user.username|slice:"10:11" == 'o' %}
+          <li><a href="/allocate_area/">Allocate Areas</a></li>
+        {% endif %}
       </ul>
       <ul class="nav navbar-nav navbar-right">
         {% if user.is_authenticated %}

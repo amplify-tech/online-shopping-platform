@@ -4,12 +4,12 @@ from django.contrib.auth.models import User
 from psycopg2.sql import SQL,Identifier
 from login.queries import connect_db
 from datetime import datetime
-
+from decimal import *
 
 ################################################################   
-rate_owner    = 0.05
-rate_seller   = 0.85
-rate_delivery = 0.10
+rate_owner    = Decimal(0.05)
+rate_seller   = Decimal(0.85)
+rate_delivery = Decimal(0.10)
 
 ################################################################    
 def showProduct():
@@ -152,16 +152,19 @@ def addaddressDB(userid, state, city, street,pincode):
 def deleteaddressDB(userid, address_id):
 	valid,conn,cur = connect_db()
 	if valid:
-		cur.execute("SELECT customer_id FROM customer where user_id = %s", [userid])
-		row = cur.fetchone()
-		if row is not None:
-			cur.execute("""DELETE FROM address where customer_id= %s and address_id= %s;""",
-				[row.customer_id, address_id])
-			conn.commit()
-		
-		cur.close()
-		conn.close()
-		return True
+		try:
+			cur.execute("SELECT customer_id FROM customer where user_id = %s", [userid])
+			row = cur.fetchone()
+			if row is not None:
+				cur.execute("""DELETE FROM address where customer_id= %s and address_id= %s;""",
+					[row.customer_id, address_id])
+				conn.commit()
+			
+			cur.close()
+			conn.close()
+			return True
+		except:
+			return False
 	else:
 		print("Something went wrong!")
 		return False
@@ -235,6 +238,25 @@ def getCart(userid):
 		print("Something went wrong!")
 		return None
 
+def getWishlist(userid):
+	valid,conn,cur = connect_db()
+	if valid:
+		cur.execute("""SELECT product.product_id,product_name,price, url
+				FROM customer
+				INNER JOIN wishlist ON wishlist.customer_id = customer.customer_id
+				INNER JOIN wishlist_product ON wishlist_product.wishlist_id = wishlist.wishlist_id
+				INNER JOIN product ON product.product_id = wishlist_product.product_id
+				INNER JOIN product_images ON product_images.product_id = product.product_id
+				where customer.user_id = %s AND default_img = True""",
+			[userid])
+		product_data = cur.fetchall()
+		cur.close()
+		conn.close()
+		return product_data
+	else:
+		print("Something went wrong!")
+		return None
+
 
 def deleteFromCart(userid,product_id):
 	valid,conn,cur = connect_db()
@@ -244,6 +266,25 @@ def deleteFromCart(userid,product_id):
 				cart_id IN 
 					( SELECT cart_id from cart
 					INNER JOIN customer ON customer.customer_id=cart.customer_id
+					where user_id = %s
+					);""",
+				[product_id, userid])
+		conn.commit()
+		cur.close()
+		conn.close()
+		return True
+	else:
+		print("Something went wrong!")
+		return False
+
+def deleteFromWishlist(userid,product_id):
+	valid,conn,cur = connect_db()
+	if valid:
+		cur.execute("""DELETE FROM wishlist_product
+				WHERE product_id = %s AND
+				wishlist_id IN 
+					( SELECT wishlist_id from wishlist
+					INNER JOIN customer ON customer.customer_id=wishlist.customer_id
 					where user_id = %s
 					);""",
 				[product_id, userid])
@@ -289,31 +330,93 @@ def payNow(userid, address_id):
 
 		if row is None:
 			msz = "Something went wrong!"
-		else:
+			return msz
+
+		current = datetime.now()
+		#  move prodcuts from cart to order table
+		cur.execute("""INSERT INTO orders (product_id,customer_id,delivery_person_id,quantity,address_id,timestmp)
+			SELECT product_id,customer.customer_id,%s,quantity,%s,%s
+			FROM customer
+			INNER JOIN cart ON cart.customer_id = customer.customer_id
+			INNER JOIN cart_product ON cart_product.cart_id = cart.cart_id
+			where user_id = %s
+			RETURNING order_id;
+			""",
+			[row.delivery_person_id,address_id,current,userid])
+
+		rows = cur.fetchall()
+		orderid_list = tuple([x.order_id for x in rows])
+
+		# emptying cart
+		cur.execute("""DELETE FROM cart_product
+			where cart_id in (
+				SELECT cart_id
+				FROM cart
+				INNER JOIN customer ON cart.customer_id = customer.customer_id
+				where user_id = %s);"""
+			,[userid])
+		
+
+		#  distribute money
+		cur.execute("""SELECT delivery_person_id,seller_id,price*quantity as total_price
+			FROM orders
+			INNER JOIN product ON product.product_id = orders.product_id
+			where order_id in %s;""",
+			[orderid_list])
+		ls = cur.fetchall()
+
+		for row in ls:
+			# for each prodcut deduct/add money
+			amount_customer = row.total_price 
+			amount_seller   = row.total_price * rate_seller
+			amount_del      = row.total_price * rate_delivery
+			amount_owner    = row.total_price * rate_owner
+
+			cur.execute("""UPDATE wallet SET balance = balance - %s
+						where user_id= %s 
+						RETURNING wallet.wallet_id;""",
+						[amount_customer, userid])
+			cwid = cur.fetchone()[0]
+
+			cur.execute("""UPDATE wallet SET balance = balance + %s
+						WHERE user_id IN 
+						(SELECT user_id from seller where seller_id = %s)
+						RETURNING wallet.wallet_id;""",
+						[amount_seller, row.seller_id])
+			swid = cur.fetchone()[0]
+
+			cur.execute("""UPDATE wallet SET balance = balance + %s
+						WHERE user_id IN 
+						(SELECT user_id from delivery_person where delivery_person_id = %s)
+						RETURNING wallet.wallet_id;""",
+						[amount_del, row.delivery_person_id])
+			dwid = cur.fetchone()[0]
+
+			cur.execute("""UPDATE wallet SET balance = balance + %s
+						where user_id= %s
+						RETURNING wallet.wallet_id;""",
+						[amount_owner, 0])
+			owid = cur.fetchone()[0]
+
+			#  handle   3 transactions
 			current = datetime.now()
-			#  move prodcuts from cart to order table
-			cur.execute("""INSERT INTO orders (product_id,customer_id,delivery_person_id,quantity,address_id,timestmp)
-				SELECT product_id,customer.customer_id,%s,quantity,%s,%s
-				FROM customer
-				INNER JOIN cart ON cart.customer_id = customer.customer_id
-				INNER JOIN cart_product ON cart_product.cart_id = cart.cart_id
-				where user_id = %s;
-				""",
-				[row.delivery_person_id,address_id,current,userid])
+			cur.execute("INSERT INTO transactions (wallet_id_send,wallet_id_got,amount,timestmp) VALUES (%s,%s,%s,%s);",
+						[cwid, swid, amount_seller,current])
 
-			# emptying cart
-			cur.execute("""DELETE FROM cart_product
-				where cart_id in (
-					SELECT cart_id
-					FROM cart
-					INNER JOIN customer ON cart.customer_id = customer.customer_id
-					where user_id = %s);"""
-				,[userid])
+			cur.execute("INSERT INTO transactions (wallet_id_send,wallet_id_got,amount,timestmp) VALUES (%s,%s,%s,%s);",
+						[cwid, dwid, amount_del,current])
+
+			cur.execute("INSERT INTO transactions (wallet_id_send,wallet_id_got,amount,timestmp) VALUES (%s,%s,%s,%s);",
+						[cwid, owid, amount_owner,current])
 			
-			# deduct money
 
-			conn.commit()
-			msz = "Order Placed!"
+		# add prodcut/order for tracking
+		for order_id in orderid_list:
+			cur.execute("INSERT INTO tracking (order_id,pincode,status,updated_by,timestmp) VALUES (%s,%s,%s,%s,%s);",
+						[order_id, "999999", "Ordered",0,current])
+
+		conn.commit()
+		msz = "Order Placed!"
 		cur.close()
 		conn.close()
 		return msz
@@ -321,4 +424,68 @@ def payNow(userid, address_id):
 		msz = "Something went wrong!"
 		return msz
 
+# history
+def getOrderHistory(userid, role):
+	valid,conn,cur = connect_db()
+	if valid:
+		history_data = None
+		if role == 'b':
+			cur.execute("""SELECT orders.order_id, url,product_name,price,tracking.pincode,status,tracking.timestmp as track_time,quantity, orders.timestmp as order_time 
+				FROM tracking 
+				INNER JOIN orders ON tracking.order_id=orders.order_id
+				INNER JOIN product ON product.product_id=orders.product_id
+				INNER JOIN product_images ON product_images.product_id=product.product_id
+				INNER JOIN customer ON customer.customer_id=orders.customer_id
+				where default_img = True 
+					AND customer.user_id = %s
+				ORDER BY orders.order_id DESC,tracking.timestmp DESC;""",
+				[userid])
+			history_data = cur.fetchall()
 
+		elif role == 's':
+			cur.execute("""SELECT orders.order_id, url,product_name,price,tracking.pincode,status,tracking.timestmp as track_time,quantity, orders.timestmp as order_time 
+				FROM tracking 
+				INNER JOIN orders ON tracking.order_id=orders.order_id
+				INNER JOIN product ON product.product_id=orders.product_id
+				INNER JOIN product_images ON product_images.product_id=product.product_id
+				INNER JOIN seller ON seller.seller_id=product.seller_id
+				where default_img = True 
+					AND seller.user_id = %s
+				ORDER BY orders.order_id DESC,tracking.timestmp DESC;""",
+				[userid])
+			history_data = cur.fetchall()
+
+		elif role == 'd':
+			cur.execute("""SELECT orders.order_id, url,product_name,price,tracking.pincode,status,tracking.timestmp as track_time,quantity, orders.timestmp as order_time 
+				FROM tracking 
+				INNER JOIN orders ON tracking.order_id=orders.order_id
+				INNER JOIN product ON product.product_id=orders.product_id
+				INNER JOIN product_images ON product_images.product_id=product.product_id
+				INNER JOIN delivery_person ON delivery_person.delivery_person_id=orders.delivery_person_id
+				where default_img = True 
+					AND delivery_person.user_id = %s
+				ORDER BY orders.order_id DESC,tracking.timestmp DESC;""",
+				[userid])
+			history_data = cur.fetchall()
+
+		cur.close()
+		conn.close()
+		return history_data
+	else:
+		print("Something went wrong!")
+		return None
+
+def updateStatus(userid,role,order_id,status,pincode):
+	valid,conn,cur = connect_db()
+	if valid:
+		current = datetime.now()
+		cur.execute("INSERT INTO tracking (order_id,pincode,status,updated_by,timestmp) VALUES (%s,%s,%s,%s,%s);",
+					[order_id, pincode,status,userid,current])
+		conn.commit()
+		cur.close()
+		conn.close()
+		return "Status Updated"
+	else:
+		return "Something went wrong!"
+
+		

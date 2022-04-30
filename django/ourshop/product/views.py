@@ -57,6 +57,19 @@ def cart(request):
     context = {'product_data':product_data, 'total_price':total_price}
     return render(request, 'cart.html',context)
 
+def wishlist(request):
+    user = request.user
+    if not user.is_authenticated:
+        return redirect('/')
+    if user.username[-1] !='b':   # check if buyer
+        return redirect('/')
+
+    product_data = getWishlist(user.id)
+    if len(product_data) ==0:
+        messages.info(request, "Your Wishlist is empty!")
+    context = {'product_data':product_data}
+    return render(request, 'wishlist.html',context)
+
 def ordernow(request):
     user = request.user
     if not user.is_authenticated:
@@ -65,7 +78,6 @@ def ordernow(request):
         return redirect('/')
   
     product_data = getCart(user.id)
-    print(product_data)
     if len(product_data) ==0:
         messages.info(request, "please add some products to Cart")
         return redirect('/cart/')
@@ -89,7 +101,7 @@ def paynow(request):
         else:
             messages.info(request, "Invalid Input!")
 
-    return redirect('/')
+    return redirect('/history/order/')
 
 
 def addmoney(request):
@@ -159,6 +171,22 @@ def deletecartproduct(request, product_id=None):
         messages.info(request, "Something went wrong : Product not deleted!!")
     return redirect('/cart/')
 
+def deletewishlistproduct(request, product_id=None):
+    if not product_id.isnumeric():
+        return HttpResponse("<h1> invalid url </h1>")
+    user = request.user
+    if not user.is_authenticated:
+        return redirect('/')
+    if user.username[-1] !='b':   # check if buyer
+        return redirect('/')
+
+    result = deleteFromWishlist(user.id,product_id)
+    if result:
+        messages.info(request, "Product Deleted from Wishlist")
+    else:
+        messages.info(request, "Something went wrong : Product not deleted!!")
+    return redirect('/wishlist/')
+
 def update_quantity(request):
     user = request.user
     if user.is_authenticated and request.method == 'POST':
@@ -186,7 +214,7 @@ def addtowish(request, product_id=None):
             messages.info(request, "Something went wrong : Product not added!!")
     else:
         messages.info(request, "Please Login as Buyer First!")
-    return redirect('/cart/')
+    return redirect('/wishlist/')
 
 ##################################################################
 def sell(request):
@@ -230,5 +258,26 @@ def sell(request):
             messages.info(request, "Something went wrong : product not added!")
         return redirect('/sell/')
     else:
-        return render(request, 'seller/sell.html')
+        return render(request, 'sell.html')
 
+##################################################################
+def history_order(request):
+    user = request.user
+    if not user.is_authenticated:
+        return redirect('/')
+
+    role = user.username[-1]
+    history_data = getOrderHistory(user.id, role)
+    context = {'history_data':history_data}
+    return render(request, 'order_history.html',context)
+
+def update_status(request):
+    user = request.user
+    if user.is_authenticated and request.method == 'POST':
+        role = user.username[-1]
+        pincode  = request.POST['pincode']
+        status  = request.POST['status']
+        order_id  = request.POST['order_id']
+        msz = updateStatus(user.id,role,order_id,status,pincode)
+        messages.info(request, msz)
+    return redirect('/history/order/')

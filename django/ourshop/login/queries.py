@@ -78,6 +78,7 @@ def register_new_user(username,fullname, role, password,pincode):
 			cur.execute("INSERT INTO seller (user_id) VALUES (%s)", [new_user.id])
 		
 		elif role=='d':
+			cur.execute("INSERT INTO area_allocation (pincode) VALUES (%s) ON CONFLICT DO NOTHING", [pincode])
 			cur.execute("INSERT INTO delivery_person (user_id,pincode) VALUES (%s,%s)", [new_user.id,pincode])
 
 		elif role=='b':
@@ -103,19 +104,5 @@ def register_new_user(username,fullname, role, password,pincode):
 		print("Something went wrong: User not registered!")
 
 ################################################################		
-# area allocation
-def savePincode(pincode_list):
-	valid,conn,cur = connect_db()
-	if valid:
-		query_insert = "INSERT INTO area_allocation VALUES %s  ON CONFLICT DO NOTHING" 		
-		execute_values(cur, query_insert, pincode_list)
-		conn.commit()
-		cur.close()
-		conn.close()
-		return True
-	else:
-		print("Something went wrong!")
-		return False
-
 
 

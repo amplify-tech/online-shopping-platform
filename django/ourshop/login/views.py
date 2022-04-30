@@ -142,21 +142,8 @@ def allocate_area(request):
 		if request.user.id in special_id:
 			try:
 				folder = '/home/akram/Desktop/coding/project/django/DB_part/csv_user/'
-				pincode_file = folder + 'pincode.csv'
 				del_boy_file = folder + 'del.csv'
-
-				# fix some pincode
-				with open(pincode_file, 'r') as csvfile:
-					reader = csv.reader(csvfile)
-					column_name = next(reader)
-
-					pincode_list = []
-					for row in reader:
-						# print(row)
-						pincode_list.append(row)
-
-					savePincode(pincode_list)
-
+				
 				# add some delivery persons
 				with open(del_boy_file, 'r') as csvfile:
 					reader = csv.reader(csvfile)
